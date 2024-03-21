@@ -5,6 +5,7 @@ from datetime import datetime
 from websockets.server import serve
 
 from utils.networking import Request, Response
+from utils.subscribers import Subscriber
 
 logging.basicConfig(format=f"[{datetime.now()}] " + "%(message)s", level=logging.DEBUG)
 
@@ -40,7 +41,7 @@ class Server:
 
 
 class SubjectServer(Server):
-    subscribers: List[Any]
+    subscribers: List[Subscriber]
 
     def process_message(self, raw_message) -> List[Dict[str, Any]]:
         return [subscriber.update(raw_message) for subscriber in self.subscribers]
