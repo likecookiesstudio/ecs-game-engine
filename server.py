@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import List, Any, Dict
 from datetime import datetime
 from websockets.server import serve
 
@@ -23,8 +24,8 @@ class Server:
     def send_response(self, response: Response) -> None:
         """send a response to client's request"""
 
-    def process_message(self, raw_message):
-        return raw_message
+    def process_message(self, raw_message) -> List[Dict[str, Any]]:
+        return [raw_message]
 
     async def main(self, websocket):
         async for message in websocket:
@@ -36,6 +37,13 @@ class Server:
     async def _run(self):
         async with serve(self.main, self.host, self.port):
             await asyncio.Future()
+
+
+class SubjectServer(Server):
+    subscribers: List[Any]
+
+    def process_message(self, raw_message) -> List[Dict[str, Any]]:
+        return [subscriber.update(raw_message) for subscriber in self.subscribers]
 
 
 if __name__ == "__main__":
