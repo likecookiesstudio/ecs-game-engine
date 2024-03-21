@@ -95,15 +95,6 @@ graph TD;
 
 ```mermaid
 graph TD;
-    subgraph Game
-    process_events
-    generate_events
-    end
-
-    subgraph EventHandler
-    request_to_events
-    events_to_response
-    end
 
     subgraph Server
     receive_request
@@ -115,13 +106,26 @@ graph TD;
     receive_response
     end
 
+    subgraph EventHandler
+    request_to_events
+    events_to_response
+    end
+
+    subgraph Game
+    process_events
+    generate_events
+    end
+
+    receive_response-.->send_request
+
     send_request--request-->receive_request;
     receive_request--request-->request_to_events;
     request_to_events--event/s-->process_events;
-    
+
     process_events-.->generate_events
 
     generate_events--event/s-->events_to_response;
     events_to_response--response-->send_response;
     send_response--response-->receive_response;
+
 ```
