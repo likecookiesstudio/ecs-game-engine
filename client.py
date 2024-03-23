@@ -37,8 +37,7 @@ class Client:
     def _receive_response(self) -> None:
         """receive a response from the server"""
         response = self.websocket.recv()
-        decoded_response = self._decode_response(response)
-        return decoded_response
+        return response
 
     def _send_request(self, request: Request) -> None:
         """send a request to the server"""
@@ -56,7 +55,8 @@ class Client:
     def __handle_responses(self) -> None:
         while self.running:
             response = self._receive_response()
-            self.queue_response(response)
+            decoded_response = self._decode_response(response)
+            self.queue_response(decoded_response)
 
     def queue_request(self, request: Request) -> None:
         self.__requests.append(request)

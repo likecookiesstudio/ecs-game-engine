@@ -24,17 +24,17 @@ graph TD;
 ```mermaid
 graph TD;
     subgraph Client
-    send_request
-    receive_response
+    _send_request
+    _receive_response
     end
 
-    send_request--request-->Server;
+    _send_request--request-->Server;
     Server--request-->EventHandler;
     EventHandler--event/s-->Game;
 
     Game--event/s-->EventHandler;
     EventHandler--response-->Server;
-    Server--response-->receive_response;
+    Server--response-->_receive_response;
 ```
 
 1.2.2. Server class: method granularity level
@@ -97,28 +97,42 @@ graph TD;
 graph TD;
 
     subgraph Server
-    receive_request
-    send_response
+        receive_request
+        send_response
     end
 
     subgraph Client
-    send_request
-    receive_response
+        subgraph __init__
+            TODO
+        end
+        _send_request
+        subgraph threading.Thread  __handle_responses
+            subgraph queue_response\response\
+                self.__responses.append\response\
+            end
+            _receive_response --response--> _decode_response\response\--decoded_response-->queue_response\response\
+        end
+        subgraph threading.Thread  __handle_requests
+            subgraph queue_request\response\
+                self.__requests.append\response\
+            end
+            _send_request --request--> _decode_request\request\--decoded_request-->queue_request\request\
+        end
     end
 
     subgraph EventHandler
-    request_to_events
-    events_to_response
+        request_to_events
+        events_to_response
     end
 
     subgraph Game
-    process_events
-    generate_events
+        process_events
+        generate_events
     end
 
-    receive_response-.->send_request
+    _receive_response-.->_send_request
 
-    send_request--request-->receive_request;
+    queue_request\request\--request-->receive_request;
     receive_request--request-->request_to_events;
     request_to_events--event/s-->process_events;
 
@@ -126,6 +140,6 @@ graph TD;
 
     generate_events--event/s-->events_to_response;
     events_to_response--response-->send_response;
-    send_response--response-->receive_response;
+    send_response--response-->_receive_response;
 
 ```
