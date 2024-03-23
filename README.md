@@ -103,20 +103,30 @@ graph TD;
 
     subgraph Client
         subgraph __init__
-            TODO
+            self.__requests
+            self.__responses
+
+            self.send_thread
+            self.recv_thread
+
+            self.send_thread.start\\
+            self.recv_thread.start\\
+
         end
-        _send_request
-        subgraph threading.Thread  __handle_responses
-            subgraph queue_response\response\
-                self.__responses.append\response\
-            end
-            _receive_response --response--> _decode_response\response\--decoded_response-->queue_response\response\
+
+        self.__responses-.define #1.->self.__requests
+        self.__requests-.define #2.->self.recv_thread
+        self.recv_thread-.define #3.->self.send_thread
+        self.send_thread-.define #4.->self.recv_thread.start\\
+        self.recv_thread.start\\-.define #5.->self.send_thread.start\\
+
+        subgraph self.send_thread\\threading.Thread\__handle_requests\
+            _load_next_request --request--> _encode_request\request\--encoded_request-->_send_request\encoded_request\
         end
-        subgraph threading.Thread  __handle_requests
-            subgraph queue_request\response\
-                self.__requests.append\response\
-            end
-            _send_request --request--> _decode_request\request\--decoded_request-->queue_request\request\
+
+        subgraph self.recv_thread\\threading.Thread\__handle_responses\
+            queue_response\response\
+            _receive_response --response--> _decode_response\response\--decoded_response-->queue_response\response\-->self.__responses
         end
     end
 
@@ -130,9 +140,16 @@ graph TD;
         generate_events
     end
 
-    _receive_response-.->_send_request
+    subgraph GameClient
+    end
 
-    queue_request\request\--request-->receive_request;
+    self.__responses-->GameClient
+    GameClient-->self.__requests
+    self.__requests-->_load_next_request
+    self.send_thread.start\\-.play....->self.send_thread\\threading.Thread\__handle_requests\
+    self.recv_thread.start\\-.play.->self.recv_thread\\threading.Thread\__handle_responses\
+
+    _send_request\encoded_request\--request-->receive_request;
     receive_request--request-->request_to_events;
     request_to_events--event/s-->process_events;
 
