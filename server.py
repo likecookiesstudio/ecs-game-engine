@@ -4,7 +4,7 @@ from typing import List, Any, Dict
 from datetime import datetime
 from websockets.server import serve
 
-from utils.networking import Request, Response
+from utils.networking import Response
 from utils.subscribers import Subscriber
 
 logging.basicConfig(format=f"[{datetime.now()}] " + "%(message)s", level=logging.DEBUG)
@@ -19,7 +19,7 @@ class Server:
     def __init__(self) -> None:
         asyncio.run(self._run())
 
-    def receive_request(self, request: Request) -> None:
+    def receive_request(self) -> None:
         """receive client's request"""
 
     def send_response(self, response: Response) -> None:
