@@ -4,8 +4,8 @@ from typing import List, Any, Dict
 from datetime import datetime
 from websockets.server import serve
 
-from utils.networking import Response
-from utils.subscribers import Subscriber
+from base.responses import Response
+from base.subscribers import Subscriber
 
 logging.basicConfig(format=f"[{datetime.now()}] " + "%(message)s", level=logging.DEBUG)
 

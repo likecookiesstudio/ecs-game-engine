@@ -11,19 +11,19 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        { // Server
-            "name": "Server",
+        { // Tic-Tac-Toe server
+            "name": "Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "server.py",
+            "program": "tic_tac_toe_server.py",
             "console": "integratedTerminal"
         },
-        { // Client
-            "name": "Client",
+        { // Tic-Tac-Toe client
+            "name": "Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "client.py",
+            "program": "tic_tac_toe_client.py",
             "console": "integratedTerminal"
-        }
+        },
     ]
 }

@@ -4,7 +4,8 @@ from typing import List
 
 from websockets.sync.client import connect
 
-from utils.networking import Request, Response
+from .requests import Request
+from .responses import Response
 
 
 class Client:
@@ -75,7 +76,7 @@ class Client:
 
 
 if __name__ == "__main__":
-    from custom_requests import Auth
+    from base.requests import Auth
 
     class GameMock:
         def __init__(self, client: Client):
