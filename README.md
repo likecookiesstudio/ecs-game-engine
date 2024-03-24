@@ -43,7 +43,7 @@ graph TD;
         events_to_response
     end
 
-    subgraph Game
+    subgraph GameServer
         process_events
         generate_events
     end
@@ -99,17 +99,17 @@ graph TD;
     %% EventHandler
     %%! EventHandler
 
-    %% EventHandler -> Game
+    %% EventHandler -> GameServer
     request_to_events--event/s-->process_events;
-    %%! EventHandler -> Game
+    %%! EventHandler -> GameServer
 
-    %% Game
+    %% GameServer
     process_events-.->generate_events
-    %%! Game
+    %%! GameServer
 
-    %% Game -> EventHandler
+    %% GameServer -> EventHandler
     generate_events--event/s-->events_to_response;
-    %%! Game -> EventHandler
+    %%! GameServer -> EventHandler
     
     %% EventHandler -> Server
     events_to_response--response-->send_response;
