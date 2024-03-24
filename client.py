@@ -7,16 +7,6 @@ from websockets.sync.client import connect
 from utils.networking import Request, Response
 
 
-# def hello():
-#     with connect("ws://localhost:8765") as websocket:
-#         websocket.send("Hello world!")
-#         message = websocket.recv()
-#         print(f"Received: {message}")
-
-
-# hello()
-
-
 class Client:
     def __init__(self) -> None:
         self.websocket = connect(
@@ -36,33 +26,45 @@ class Client:
 
     def _receive_response(self) -> None:
         """receive a response from the server"""
-        response = self.websocket.recv()
-        decoded_response = self._decode_response(response)
-        return decoded_response
+        return self.websocket.recv()
 
     def _send_request(self, request: Request) -> None:
         """send a request to the server"""
-        request = request.json()
         return self.websocket.send(request)
 
     def _decode_response(self, response) -> Response:
         return json.loads(response)
 
+    def _encode_request(self, request: Request):
+        return request.json()
+
     def __handle_requests(self) -> None:
         while self.running:
             while self.__requests:
-                self._send_request(self.__requests.pop(0))
+                request = self._load_next_request()
+                encoded_request = self._encode_request(request)
+                self._send_request(encoded_request)
 
     def __handle_responses(self) -> None:
         while self.running:
             response = self._receive_response()
-            self.queue_response(response)
+            decoded_response = self._decode_response(response)
+            self._queue_response(decoded_response)
 
     def queue_request(self, request: Request) -> None:
         self.__requests.append(request)
 
-    def queue_response(self, response: Response) -> None:
+    def _queue_response(self, response: Response) -> None:
         self.__responses.append(response)
+
+    def _load_next_request(self) -> Request:
+        return self.__requests.pop(0)
+
+    def load_next_response(self) -> Response:
+        return self.__responses.pop(0) if self.__responses else None
+
+    def queue_next_request(self, request: Request) -> None:
+        self.__requests.append(request)
 
     def start(self, loop_method: callable) -> None:
         loop_method()
