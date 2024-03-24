@@ -7,16 +7,6 @@ from websockets.sync.client import connect
 from utils.networking import Request, Response
 
 
-# def hello():
-#     with connect("ws://localhost:8765") as websocket:
-#         websocket.send("Hello world!")
-#         message = websocket.recv()
-#         print(f"Received: {message}")
-
-
-# hello()
-
-
 class Client:
     def __init__(self) -> None:
         self.websocket = connect(
@@ -69,6 +59,12 @@ class Client:
 
     def _load_next_request(self) -> Request:
         return self.__requests.pop(0)
+
+    def load_next_response(self) -> Response:
+        return self.__responses.pop(0) if self.__responses else None
+
+    def queue_next_request(self, request: Request) -> None:
+        self.__requests.append(request)
 
     def start(self, loop_method: callable) -> None:
         loop_method()
