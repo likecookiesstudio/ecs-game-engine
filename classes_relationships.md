@@ -7,11 +7,6 @@ A piece of software or a framework aiming at covering the basics of gamedev
 ```mermaid
 graph TD;
 
-    subgraph Server
-        receive_request
-        send_response
-    end
-
     subgraph Client
         send_request
         receive_response
@@ -23,12 +18,24 @@ graph TD;
         event_to_request
     end
 
-    subgraph GameServer
-        subgraph process_request
-        request_to_event
-        process_event
+    subgraph Server
+        start
+        _run
+        subgraph main
+            receive_request
+            subgraph handle_request
+                subgraph GameServer
+                    subgraph process_request
+                    request_to_event
+                    process_event
+                    end
+                end
+            end
+            send_response
         end
     end
+
+
     %% GameClient
     update_ui --> input
     input --event--> event_to_request
@@ -46,19 +53,16 @@ graph TD;
     %%! Client -> Server
 
     %% Server
+        %% Server -> GameServer
+        receive_request --request--> request_to_event;
+        %%! Server -> GameServer
+        %% GameServer
+        request_to_event -.event.-> process_event;
+        %%! GameServer
+        %% GameServer -> Server
+        process_event --response--> send_response;
+        %%! GameServer -> Server
     %%! Server
-    
-    %% Server -> GameServer
-    receive_request --request--> request_to_event;
-    %%! Server -> GameServer
-
-    %% GameServer
-    request_to_event -.event.-> process_event;
-    %%! GameServer
-
-    %% GameServer -> Server
-    process_event --response--> send_response;
-    %%! GameServer -> Server
     
     %% Server -> Client
     send_response --response--> receive_response;
