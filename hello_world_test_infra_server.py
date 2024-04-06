@@ -23,10 +23,12 @@ class EchoEvent(Event):
 
 class GameServer:
     def process_reqeust(self, request: Dict[str, Any]) -> Event:
+        """Process a request and return an event"""
         event = self.request_to_event(request)
         return self.process_event(event)
     
     def request_to_event(self, request: Dict[str, Any]) -> Event:
+        """Convert a request to an event"""
         method = request.get("method")
         if method is None:
             raise ValueError("Method not found")
@@ -36,7 +38,12 @@ class GameServer:
             raise ValueError(f"Method not found: {method}")
 
     def process_event(self, event: Event) -> Dict[str, Any]:
-        pass
+        """Process an event and return a response"""
+        if isinstance(event, EchoEvent):
+            return {"method": "echo", "message": event.message}
+        else:
+            raise ValueError(f"Event not found: {event}")
+
 
 
 class Server:
