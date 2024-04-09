@@ -7,12 +7,16 @@ A piece of software or a framework aiming at covering the basics of gamedev
 ```mermaid
 graph TD;
 
-    subgraph Server
-        receive_request
-        send_response
+    subgraph GameClient
+        update
+        input
+        event_to_request
     end
 
     subgraph Client
+        send_request
+        receive_response
+
         subgraph __init__
         self.__requests
         self.__responses
@@ -38,25 +42,25 @@ graph TD;
         self.queue_next_request
     end
 
-    subgraph EventHandler
-        request_to_events
-        events_to_response
+    subgraph Server
+        receive_request
+        update
+        send_response
     end
 
     subgraph GameServer
-        process_events
-        generate_events
+        update
+        process_request
+        process_event
     end
 
-    subgraph GameClient
-    end
-
-    %% GameClient #TODO
+    %% GameClient
+    update --> input
+    input --event--> event_to_request
     %%! GameClient
 
-    %% GameClient -> Client #TODO
-    GameClient-->self.queue_next_request
-    self.queue_next_request-->self.__requests
+    %% GameClient -> Client
+    event_to_request --request--> send_request
     %%! GameClient -> Client
 
     %% Client
@@ -86,34 +90,23 @@ graph TD;
     %%! Client
 
     %% Client -> Server
-    _send_request\encoded_request\--request-->receive_request;
+    send_request--request-->receive_request;
     %%! Client -> Server
 
     %% Server
     %%! Server
     
-    %% Server -> EventHandler
-    receive_request--request-->request_to_events;
-    %%! Server -> EventHandler
-    
-    %% EventHandler
-    %%! EventHandler
-
-    %% EventHandler -> GameServer
-    request_to_events--event/s-->process_events;
-    %%! EventHandler -> GameServer
+    %% Server -> GameServer
+    receive_request--request-->process_event;
+    %%! Server -> GameServer
 
     %% GameServer
-    process_events-.->generate_events
+    process_event-.->generate_event
     %%! GameServer
 
-    %% GameServer -> EventHandler
-    generate_events--event/s-->events_to_response;
-    %%! GameServer -> EventHandler
-    
-    %% EventHandler -> Server
-    events_to_response--response-->send_response;
-    %%! EventHandler -> Server
+    %% GameServer -> Server
+    generate_event--event/s-->send_response;
+    %%! GameServer -> Server
     
     %% Server -> Client
     send_response--response-->_receive_response;

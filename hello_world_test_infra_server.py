@@ -3,7 +3,7 @@ import logging
 import json
 
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, List, Union, Literal
 from datetime import datetime
 from websockets.server import serve
 
@@ -21,12 +21,28 @@ class EchoEvent(Event):
     meta: Dict[str, Any] = {}
 
 
-class GameServer:
+class Subscriber:
+    def update(
+        self,
+        request: Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ],
+    ) -> None:
+        pass
+
+
+class GameServer(Subscriber):
     def process_reqeust(self, request: Dict[str, Any]) -> Event:
         """Process a request and return an event"""
         event = self.request_to_event(request)
         return self.process_event(event)
-    
+
     def request_to_event(self, request: Dict[str, Any]) -> Event:
         """Convert a request to an event"""
         method = request.get("method")
@@ -44,19 +60,81 @@ class GameServer:
         else:
             raise ValueError(f"Event not found: {event}")
 
+    def update(
+        self,
+        request: Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ],
+    ) -> None:
+        return self.process_reqeust(request)
 
 
 class Server:
     host: str = "localhost"
     port: int = 8765
 
-    async def main(self, websocket):
+    async def receive_request(self, websocket):
+        decoded_requests = []
         async for raw_request in websocket:
             LOGGER.debug(f"{websocket.remote_address}: {raw_request}")
             decoded_request = json.loads(raw_request)
-            request = {**decoded_request, "websocket": websocket.remote_address}
-            response
-            await websocket.send(response)
+            decoded_requests.append(decoded_request)
+        return decoded_requests
+
+    def handle_request(
+        self,
+        request: Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ],
+    ) -> Dict[
+        Union[
+            Literal["method"],
+            Literal["body"],
+            Literal["sender"],
+            Literal["target"],
+        ],
+        Any,
+    ]:
+        """Handle a request and return responses"""
+        return request
+
+    async def send_response(
+        self,
+        response: Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ],
+        websocket,
+    ):
+        await websocket.send(json.dumps(response))
+
+    async def main(self, websocket):
+        requests = await self.receive_request(websocket)
+        responses = await asyncio.gather(
+            *[self.handle_request(request) async for request in requests]
+        )
+        async for response in responses:
+            target = response.pop("target", None)
+            if target is None:
+                continue
+            await self.send_response(response, target)
 
     async def _run(self):
         async with serve(self.main, self.host, self.port):
@@ -64,10 +142,42 @@ class Server:
 
     def start(self) -> None:
         asyncio.run(self._run())
-    
-    def _handle_requests(self, ):
+
+
+class SubjectServer(Server):
+    def __init__(self, subscribers: List[Subscriber]) -> None:
+        self.subscribers = subscribers
+        super().__init__()
+
+    def handle_request(
+        self,
+        request: Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ],
+    ) -> Dict[
+        Union[
+            Literal["method"],
+            Literal["body"],
+            Literal["sender"],
+            Literal["target"],
+        ],
+        Any,
+    ]:
+        """Handle a request and return responses"""
+        responses = []
+        for subscriber in self.subscribers:
+            response = subscriber.update(request)
+            responses.append(response)
+        return responses
 
 
 if __name__ == "__main__":
-    server = Server()
+    game_server = GameServer()
+    server = SubjectServer([game_server])
     server.start()
