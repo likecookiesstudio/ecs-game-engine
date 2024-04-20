@@ -49,20 +49,21 @@ graph TD;
         self.add_response\response\
     end
 
-    subgraph Server
+    subgraph SubjectServer
         start
         _run
-        subgraph main
-            receive_request
-            subgraph handle_request
-                subgraph GameServer
-                    subgraph process_request
-                    request_to_event
-                    process_event
-                    end
+        subgraph handle_connection
+            on_connection
+            handle_request
+            send_response
+        end
+        subgraph handle_request
+            subgraph GameServer
+                subgraph process_request
+                request_to_event
+                process_event
                 end
             end
-            send_response
         end
     end
 
@@ -96,33 +97,34 @@ graph TD;
 
         %% Client().recv_thread\\threading.Thread\__handle_responses\
             receive_response --decoded_response--> self.add_response\response\
-            self.add_response\response\-->self.__responses
+            self.add_response\response\-.response.->self.__responses
         %%! Client().recv_thread\\threading.Thread\__handle_responses\
         self.__responses-.response.->self.get_response\\
         self.add_request/request/-.request.->self.__requests 
     %%! Client
 
-    %% Client -> Server
-    send_request\encoded_request\--request-->receive_request;
-    %%! Client -> Server
-
-    %% Server
-        %% Server -> GameServer
-        receive_request --request--> request_to_event;
-        %%! Server -> GameServer
+    %% Client -> SubjectServer
+    send_request\encoded_request\--request-->on_connection;
+    %%! Client -> SubjectServer
+    on_connection --request--> request_to_event;
+    %% SubjectServer
+        %% SubjectServer -> GameServer
+        handle_connection --request--> request_to_event;
+        %%! SubjectServer -> GameServer
         %% GameServer
         request_to_event -.event.-> process_event;
         %%! GameServer
-        %% GameServer -> Server
+        %% GameServer -> SubjectServer
         process_event --response--> send_response;
-        %%! GameServer -> Server
-    %%! Server
+        %%! GameServer -> SubjectServer
+    %%! SubjectServer
     
-    %% Server -> Client
+    %% SubjectServer -> Client
     send_response --response--> receive_response;
-    %%! Server -> Client
+    %%! SubjectServer -> Client
 
     %% Client -> GameClient
+    start-..->self.get_response\\
     self.get_response\\ --response--> update_ui;
     %%! Client -> GameClient
 

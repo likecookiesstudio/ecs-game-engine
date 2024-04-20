@@ -11,32 +11,18 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        { // Tic-Tac-Toe server
-            "name": "Tic-Tac-Toe server",
+        { // tic_tac_toe_server.py
+            "name": "tic_tac_toe_server.py",
             "type": "debugpy",
             "request": "launch",
             "program": "tic_tac_toe_server.py",
             "console": "integratedTerminal"
         },
-        { // Tic-Tac-Toe client
-            "name": "Tic-Tac-Toe client",
+        { // tic_tac_toe_client.py
+            "name": "tic_tac_toe_client.py",
             "type": "debugpy",
             "request": "launch",
             "program": "tic_tac_toe_client.py",
-            "console": "integratedTerminal"
-        },
-        { // hello_world_test_infra_server.py
-            "name": "hello_world_test_infra_server.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "hello_world_test_infra_server.py",
-            "console": "integratedTerminal"
-        },
-        { // hello_world_test_infra_client.py
-            "name": "hello_world_test_infra_client.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "hello_world_test_infra_client.py",
             "console": "integratedTerminal"
         },
     ]
