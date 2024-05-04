@@ -35,17 +35,8 @@ class TicTacToeGameClient(GameClient):
 
 
 if __name__ == "__main__":
-    # import threading
-
-    # def input_loop():
-    #     while True:
-    #         raw_request = input(">> ")
-    #         request = json.loads(raw_request)
-    #         client.add_request(request)
-
     game_client = GameClient()
     client = Client(game_client)
-    # input_thread = threading.Thread(target=input_loop, args=(client,))
     initial_request = {
         "method": "auth",
         "body": {"username": "test", "password": "test"},
@@ -60,5 +51,4 @@ if __name__ == "__main__":
     }
     client.add_request(initial_request)
     client.add_request(initial_request)
-    # input_thread.start()
     client.start()

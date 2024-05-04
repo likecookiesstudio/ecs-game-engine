@@ -55,13 +55,13 @@ graph TD;
 ```mermaid
 graph TD;
     subgraph EventHandler
-    request_to_event
+    request_to_events
     event_to_response
     end
 
     Client--request-->Server;
-    Server--request-->request_to_event;
-    request_to_event--event/s-->Game;
+    Server--request-->request_to_events;
+    request_to_events--event/s-->Game;
 
     Game--event/s-->event_to_response;
     event_to_response--response-->Server;

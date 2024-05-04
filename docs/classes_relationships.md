@@ -60,7 +60,7 @@ graph TD;
         subgraph handle_request
             subgraph GameServer
                 subgraph process_request
-                request_to_event
+                request_to_events
                 process_event
                 end
             end
@@ -106,13 +106,13 @@ graph TD;
     %% Client -> SubjectServer
     send_request\encoded_request\--request-->on_connection;
     %%! Client -> SubjectServer
-    on_connection --request--> request_to_event;
+    on_connection --request--> request_to_events;
     %% SubjectServer
         %% SubjectServer -> GameServer
-        handle_connection --request--> request_to_event;
+        handle_connection --request--> request_to_events;
         %%! SubjectServer -> GameServer
         %% GameServer
-        request_to_event -.event.-> process_event;
+        request_to_events -.event.-> process_event;
         %%! GameServer
         %% GameServer -> SubjectServer
         process_event --response--> send_response;

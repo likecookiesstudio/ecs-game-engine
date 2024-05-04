@@ -5,6 +5,7 @@ import json
 from typing import Dict, Any, List, Union, Literal
 from datetime import datetime
 from websockets.server import serve
+from websockets.legacy.server import WebSocketServerProtocol
 
 logging.basicConfig(format=f"[{datetime.now()}] " + "%(message)s", level=logging.DEBUG)
 
@@ -23,8 +24,18 @@ class Subscriber:
             ],
             Any,
         ],
-    ) -> None:
-        pass
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
+    ]:
+        raise NotImplementedError
 
 
 class GameServer(Subscriber):
@@ -39,20 +50,25 @@ class GameServer(Subscriber):
             ],
             Any,
         ],
-    ) -> Dict[
-        Union[
-            Literal["method"],
-            Literal["body"],
-            Literal["sender"],
-            Literal["target"],
-        ],
-        Any,
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
     ]:
         """Process a request and return an event"""
-        event = self.request_to_event(request)
-        return self.process_event(event)
+        events = self.request_to_events(request)
+        responses = []
+        for event in events:
+            responses.extend(self.process_event(event))
+        return responses
 
-    def request_to_event(
+    def request_to_events(
         self,
         request: Dict[
             Union[
@@ -63,26 +79,19 @@ class GameServer(Subscriber):
             ],
             Any,
         ],
-    ) -> Dict[
-        Union[
-            Literal["method"],
-            Literal["body"],
-            Literal["sender"],
-            Literal["target"],
-        ],
-        Any,
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
     ]:
         """Convert a request to an event"""
-        method = request.get("method")
-        if method is None:
-            raise ValueError("Method not found")
-        if method in ["echo", "init"]:
-            return {
-                "method": method,
-                "body": request.get("body"),
-                "sender": request.get("target"),
-                "target": request.get("sender"),
-            }
+        return [request]
 
     def process_event(
         self,
@@ -95,26 +104,19 @@ class GameServer(Subscriber):
             ],
             Any,
         ],
-    ) -> Dict[
-        Union[
-            Literal["method"],
-            Literal["body"],
-            Literal["sender"],
-            Literal["target"],
-        ],
-        Any,
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
     ]:
-        """Process an event and return a response"""
-        method = event.get("method")
-        if method is None:
-            raise ValueError("Method not found")
-        if method in ["echo", "init"]:
-            return {
-                "method": method,
-                "body": event.get("body"),
-                "sender": event.get("target"),
-                "target": event.get("sender"),
-            }
+        """Process an event and return one or more responses"""
+        return [event]
 
     def update(
         self,
@@ -127,7 +129,17 @@ class GameServer(Subscriber):
             ],
             Any,
         ],
-    ) -> None:
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
+    ]:
         return self.process_request(request)
 
 
@@ -136,30 +148,17 @@ class Server:
     port: int = 8765
 
     async def handle_connection(self, websocket):
-        raw_request = await websocket.recv()
-        LOGGER.debug(f"{websocket.remote_address}: {raw_request}")
-        decoded_request = json.loads(raw_request)
-        self.on_connection(decoded_request)
-
         async for raw_request in websocket:
             LOGGER.debug(f"{websocket.remote_address}: {raw_request}")
             decoded_request = json.loads(raw_request)
-            responses = self.handle_request(decoded_request)
-            for response in responses:
-                await self.send_response(response, websocket)
+            decoded_request["sender"] = websocket
+            await self.handle_request(decoded_request)
 
-    def on_connection(
-        self,
-        decoded_request: Dict[
-            Union[
-                Literal["method"], Literal["body"], Literal["sender"], Literal["target"]
-            ],
-            Any,
-        ],
-    ) -> None:
-        assert decoded_request["method"] == "init"
+        self.connections.remove(websocket)
+        LOGGER.debug(f"{websocket.remote_address} disconnected")
+        await websocket.close()
 
-    def handle_request(
+    async def handle_request(
         self,
         request: Dict[
             Union[
@@ -170,17 +169,9 @@ class Server:
             ],
             Any,
         ],
-    ) -> Dict[
-        Union[
-            Literal["method"],
-            Literal["body"],
-            Literal["sender"],
-            Literal["target"],
-        ],
-        Any,
-    ]:
-        """Handle a request and return responses"""
-        return request
+    ) -> None:
+        """Handle a request and if needed send a response"""
+        raise NotImplementedError
 
     async def send_response(
         self,
@@ -193,9 +184,13 @@ class Server:
             ],
             Any,
         ],
-        websocket,
     ):
-        await websocket.send(json.dumps(response))
+        receiver: WebSocketServerProtocol = response.get("receiver")
+        if receiver is None:
+            LOGGER.debug(f"No receiver for response: {response}")
+        else:
+            response = {**response, "receiver": None}
+            await receiver.send(json.dumps(response))
 
     async def _run(self):
         async with serve(self.handle_connection, self.host, self.port):
@@ -210,7 +205,7 @@ class SubjectServer(Server):
         self.subscribers = subscribers
         super().__init__()
 
-    def handle_request(
+    async def handle_request(
         self,
         request: Dict[
             Union[
@@ -221,20 +216,22 @@ class SubjectServer(Server):
             ],
             Any,
         ],
-    ) -> Dict[
-        Union[
-            Literal["method"],
-            Literal["body"],
-            Literal["sender"],
-            Literal["target"],
-        ],
-        Any,
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
     ]:
         """Handle a request and return responses"""
         responses = []
         for subscriber in self.subscribers:
             response = subscriber.update(request)
-            responses.append(response)
+            responses.extend(response)
         return responses
 
 

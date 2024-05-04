@@ -33,7 +33,17 @@ class GameClient(Subscriber):
             ],
             Any,
         ],
-    ) -> None:
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
+    ]:
         output_events = []
         events = self.response_to_events(response)
         for event in events:  # TODO: handle multiple events
@@ -53,18 +63,26 @@ class GameClient(Subscriber):
             ],
             Any,
         ],
-    ):
+    ) -> List[
+        Dict[
+            Union[
+                Literal["method"],
+                Literal["body"],
+                Literal["sender"],
+                Literal["target"],
+            ],
+            Any,
+        ]
+    ]:
         event = response
         return [event]
 
 
 class Client:
-    def __init__(self, game_client: GameClient) -> None:
+    def __init__(self) -> None:
         self.websocket = connect(
             "ws://localhost:8765"
         )  # Remember to .close() in the end
-
-        self.game_client = game_client
 
         self.running = True
 
@@ -107,6 +125,7 @@ class Client:
         while self.running:
             response = self.receive_response()
             self.add_response(response)
+            print(self.__responses)
 
     def receive_response(self) -> Dict[
         Union[
@@ -206,8 +225,7 @@ class Client:
             Any,
         ],
     ) -> None:
-        requests = self.game_client.update_ui(response)
-        self.__requests.extend(requests)
+        raise NotImplementedError
 
     def main_client_loop(self) -> None:
         while self.running:
