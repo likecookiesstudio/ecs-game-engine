@@ -57,19 +57,22 @@ class TicTacToeUI(GridLayout):
 
     def handle_event(self, event):
         print(event)
-        if event["method"] == "winner":  # {"method": "winner", "player": "X"}
-            self.game_over = True
-            return
-        if event["method"] == "tie":  # {"method": "tie"}
-            self.game_over = True
-            return
+        i, j, player = event.get("i"), event.get("j"), event.get("player")
         if (
+            event["method"] == "winner"
+        ):  # {'method': 'winner', 'i': 1, 'j': 0, 'player': 'X', 'sender': None, 'receiver': None}
+            self.game_over = True
+
+        elif (
+            event["method"] == "tie"
+        ):  # {'method': 'tie', 'i': 2, 'j': 2, 'player': 'X', 'sender': None, 'receiver': None}
+            self.game_over = True
+
+        elif (
             event["method"] == "make_move"
         ):  # {"method": "make_move", "i": 0, "j": 0, "player": "X"}
-            i, j, player = event["i"], event["j"], event["player"]
-            self.board[i][j].text = player
             self.current_player = "X" if self.current_player == "O" else "O"
-            return
+        self.board[i][j].text = player
 
 
 class TicTacToeApp(App):
