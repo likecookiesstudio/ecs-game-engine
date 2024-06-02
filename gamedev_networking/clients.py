@@ -111,9 +111,11 @@ class Client:
 
         self.send_thread = threading.Thread(target=self.__handle_requests)
         self.recv_thread = threading.Thread(target=self.__handle_responses)
+        self.main_thread = threading.Thread(target=self.start)
 
         self.send_thread.start()
         self.recv_thread.start()
+        self.main_thread.start()
 
     def __handle_requests(self) -> None:
         while self.running:

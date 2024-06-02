@@ -76,7 +76,6 @@ class TicTacToeApp(App):
     def build(self):
         ui = TicTacToeUI()
         game = TicTacToeClient(ui)
-        game.start()
         return ui
 
 
