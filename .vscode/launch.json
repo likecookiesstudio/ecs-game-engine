@@ -11,41 +11,6 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        { // tic_tac_toe_server.py
-            "name": "tic_tac_toe_server.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "tic_tac_toe_server.py",
-            "console": "integratedTerminal"
-        },
-        { // tic_tac_toe_client.py
-            "name": "tic_tac_toe_client.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "tic_tac_toe_client.py",
-            "console": "integratedTerminal"
-        },
-        { // tic_tac_toe.py
-            "name": "tic_tac_toe.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "tic_tac_toe.py",
-            "console": "integratedTerminal"
-        },
-        { // tic_tac_toe_kivy.py
-            "name": "tic_tac_toe_kivy.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "tic_tac_toe_kivy.py",
-            "console": "integratedTerminal"
-        },
-        { // tic_tac_toe_kivy_separated_ui_from_game.py
-            "name": "tic_tac_toe_kivy_separated_ui_from_game.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "tic_tac_toe_kivy_separated_ui_from_game.py",
-            "console": "integratedTerminal"
-        },
         { // tic_tac_toe_kivy_online_server.py
             "name": "tic_tac_toe_kivy_online_server.py",
             "type": "debugpy",

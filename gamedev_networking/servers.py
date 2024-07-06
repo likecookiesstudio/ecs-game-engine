@@ -23,7 +23,6 @@ class Server:
             decoded_request["sender"] = websocket
             await self.handle_request(decoded_request)
 
-        self.connections.remove(websocket)
         LOGGER.debug(f"{websocket.remote_address} disconnected")
         await websocket.close()
 

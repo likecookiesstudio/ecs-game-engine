@@ -4,19 +4,83 @@ A piece of software or a framework aiming at covering the basics of gamedev
 
 1.2.5. All classses
 
+# TicTacToeGame Architecture example
 ```mermaid
-graph TD;
+classDiagram
+    class GameUI{
+        +on_button_press(button)
+        +handle_event(event)
+        +set_game(game)
+        +start()
+    }
+    class GameLogicProxy{
+        +ui: UI
+        +process_response(response)
+        +handle_event(event)
+    }
+    class Client
 
-    subgraph GameClient
-        update
-        input
-        event_to_request
+    class GameLogic{
+        +handle_event(event)
+    }
+    class UIProxy{
+        +handle_event(event)
+    }
+    class Server
+
+    class GameUIProtocol{
+        +handle_event(event)
+    }
+    class GameLogicProtocol{
+        +handle_event(event)
+    }
+
+    %% Server <-- Client
+
+    GameLogicProtocol <|-- GameLogicProxy
+    GameLogicProtocol <|-- GameLogic
+    Client <|-- GameLogicProxy
+
+
+    Server <|-- UIProxy
+    GameUIProtocol <|-- UIProxy
+    GameUIProtocol <|-- GameUI
+
+    %% GameUI --> GameLogicProxy
+    %% GameLogicProxy --> GameUI
+    
+    %% Client --> Server
+    %% Server --> Client
+
+    %% UIProxy --> GameLogic
+    %% GameLogic --> UIProxy
+```
+```mermaid
+graph LR;
+    subgraph ServerSide
+        subgraph Server
+        end
+        subgraph GameLogic
+        end
     end
 
+    subgraph ClientSide
+        subgraph UI
+        end
+        subgraph Client
+        end
+    end
+
+    UI --> Client --> Server --> GameLogic
+    GameLogic --> Server --> Client --> UI
+```
+
+```mermaid
+graph TD;
     subgraph Client
         send_request
         receive_response
-
+        
         subgraph __init__
         self.__requests
         self.__responses
@@ -41,23 +105,6 @@ graph TD;
         self.load_next_response
         self.queue_next_request
     end
-
-    subgraph Server
-        receive_request
-        update
-        send_response
-    end
-
-    subgraph GameServer
-        update
-        process_request
-        process_event
-    end
-
-    %% GameClient
-    update --> input
-    input --event--> event_to_request
-    %%! GameClient
 
     %% GameClient -> Client
     event_to_request --request--> send_request
@@ -90,24 +137,9 @@ graph TD;
     %%! Client
 
     %% Client -> Server
-    send_request--request-->receive_request;
+    send_request--request-->handle_request;
     %%! Client -> Server
 
-    %% Server
-    %%! Server
-    
-    %% Server -> GameServer
-    receive_request--request-->process_event;
-    %%! Server -> GameServer
-
-    %% GameServer
-    process_event-.->generate_event
-    %%! GameServer
-
-    %% GameServer -> Server
-    generate_event--event/s-->send_response;
-    %%! GameServer -> Server
-    
     %% Server -> Client
     send_response--response-->_receive_response;
     %%! Server -> Client
@@ -116,5 +148,46 @@ graph TD;
     self.__responses-->self.load_next_response
     self.load_next_response-->GameClient
     %%! Client -> GameClient
+```
+```mermaid
+graph TD;
 
+    subgraph GameClient
+        update
+        input
+        event_to_request
+    end
+
+    subgraph Server
+        start
+        _run
+        handle_connection
+        handle_request
+        send_response
+    end
+
+    subgraph GameLogic
+        update
+        process_request
+        process_event
+    end
+
+    %% Server
+    start-->_run
+    _run-->handle_connection
+    handle_connection-->handle_request
+    handle_request-->send_response
+    %%! Server
+    
+    %% Server -> GameLogic
+    receive_request--request-->process_event;
+    %%! Server -> GameLogic
+
+    %% GameLogic
+    process_event-.->generate_event
+    %%! GameLogic
+
+    %% GameLogic -> Server
+    generate_event--event/s-->send_response;
+    %%! GameLogic -> Server
 ```

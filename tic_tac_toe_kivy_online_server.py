@@ -1,7 +1,7 @@
 from gamedev_networking.servers import Server
 
 
-class TicTacToeGame:
+class TicTacToeGameLogic:
     connections = {}
 
     def __init__(self, ui):
@@ -34,32 +34,45 @@ class TicTacToeGame:
     async def handle_event(self, event) -> None:
         if self.game_over:
             return
+
         sender = event.get("sender")
         if sender is None:
             print(f"No sender for event: {event}")
             return
-        
-        if not (sender in TicTacToeGame.connections):
-            if len(TicTacToeGame.connections) == 0:
-                name = "X"
-            elif len(TicTacToeGame.connections) == 1:
-                name = "O"
-            else:
-                print(f"Too many connections: {len(TicTacToeGame.connections)}, event: {event}")
-                return
-            print(f"Sender {sender} not in connections. Saving as {name}.")
-            TicTacToeGame.connections[sender] = {"name": name}
 
-        if len(TicTacToeGame.connections) < 2:
-            print(f"Too few connections: {len(TicTacToeGame.connections)}, event: {event}")
-            return
-        
-        if len(TicTacToeGame.connections) > 2:
-            print(f"Too many connections: {len(TicTacToeGame.connections)}, event: {event}")
-            return
-        
         event = {**event, "receiver": sender, "sender": None}
-        i, j, player = event["i"], event["j"], event["player"]
+
+        if event["method"] == "join":
+            if not (sender in TicTacToeGameLogic.connections):
+                if len(TicTacToeGameLogic.connections) == 0:
+                    tag = "X"
+                elif len(TicTacToeGameLogic.connections) == 1:
+                    tag = "O"
+                else:
+                    print(f"Too many connections: {len(TicTacToeGameLogic.connections)}, event: {event}")
+                    return
+                print(f"Sender {sender} not in connections. Saving as {tag}.")
+                
+                # check if the player is already assigned
+                if TicTacToeGameLogic.connections.get(sender, {}).get("tag") is not None:
+                    print(f"Player {TicTacToeGameLogic.connections[sender]['tag']} is already assigned.")
+                    return
+                
+                # assign the player
+                TicTacToeGameLogic.connections[sender] = {"tag": tag}
+                response_event = {**event, "method": "join", "body": {"tag": tag, "current_player": self.current_player}}
+                await self.ui.handle_event(response_event)
+                return
+
+        if len(TicTacToeGameLogic.connections) < 2:
+            print(f"Too few connections: {len(TicTacToeGameLogic.connections)}, event: {event}")
+            return
+        
+        if len(TicTacToeGameLogic.connections) > 2:
+            print(f"Too many connections: {len(TicTacToeGameLogic.connections)}, event: {event}")
+            return
+        
+        i, j, player = event["body"]["i"], event["body"]["j"], event["body"]["player"]
         self.board[i][j] = player
         self.ui.current_player = player
         if self.check_win(player):
@@ -67,7 +80,7 @@ class TicTacToeGame:
             response_event = {**event, "method": "winner", "player": player}
             await self.ui.handle_event(response_event)
             print(f"Player {response_event["receiver"]} was updated.")
-            receiver = (set(TicTacToeGame.connections.keys()) - {response_event["receiver"]}).pop()
+            receiver = (set(TicTacToeGameLogic.connections.keys()) - {response_event["receiver"]}).pop()
             response_event = {
                 **event,
                 "method": "winner",
@@ -83,7 +96,7 @@ class TicTacToeGame:
             response_event = {**event, "method": "tie"}
             await self.ui.handle_event(response_event)
             print(f"Player {response_event["receiver"]} was updated.")
-            receiver = (set(TicTacToeGame.connections.keys()) - {response_event["receiver"]}).pop()
+            receiver = (set(TicTacToeGameLogic.connections.keys()) - {response_event["receiver"]}).pop()
             response_event = {
                 **event,
                 "method": "tie",
@@ -93,12 +106,12 @@ class TicTacToeGame:
             print(f"Player {response_event["receiver"]} was updated.")
             self.game_over = True
             return
-        response_event = {**event, "method": "make_move", "i": i, "j": j, "player": player}
+        response_event = {**event, "method": "make_move", "body": {"i": i, "j": j, "player": player}}
         await self.ui.handle_event(response_event)
         print(f"Player {response_event["receiver"]} was updated.")
 
-        receiver = (set(TicTacToeGame.connections.keys()) - {response_event["receiver"]}).pop()
-        response_event = {**event, "method": "make_move", "i": i, "j": j, "player": player, "receiver": receiver}
+        receiver = (set(TicTacToeGameLogic.connections.keys()) - {response_event["receiver"]}).pop()
+        response_event = {**event, "method": "make_move", "body": {"i": i, "j": j, "player": player}, "receiver": receiver}	
         await self.ui.handle_event(response_event)
         print(f"Player {response_event["receiver"]} was updated.")
         
@@ -106,9 +119,9 @@ class TicTacToeGame:
         # TODO? notify all players which player's turn it is
 
 
-class TicTacToeServer(Server):
+class TicTacToeUiProxy(Server):
     def __init__(self, **kwargs):
-        self.game: TicTacToeGame = None
+        self.game: TicTacToeGameLogic = None
 
     async def handle_request(self, request):
         await self.game.handle_event(request)
@@ -119,6 +132,6 @@ class TicTacToeServer(Server):
 
 
 if __name__ == "__main__":
-    ui = TicTacToeServer()
-    game = TicTacToeGame(ui)
+    ui = TicTacToeUiProxy()
+    game = TicTacToeGameLogic(ui)
     ui.start()
