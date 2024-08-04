@@ -11,11 +11,11 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        { // tic_tac_toe_kivy_online_server.py
-            "name": "tic_tac_toe_kivy_online_server.py",
+        { // tic_tac_toe_online_server.py
+            "name": "tic_tac_toe_online_server.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "tic_tac_toe_kivy_online_server.py",
+            "program": "tic_tac_toe_online_server.py",
             "console": "integratedTerminal"
         },
         { // tic_tac_toe_kivy_online_client.py
