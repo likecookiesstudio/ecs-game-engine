@@ -56,15 +56,15 @@ graph TD;
 graph TD;
     subgraph EventHandler
     request_to_events
-    events_to_response
+    event_to_response
     end
 
     Client--request-->Server;
     Server--request-->request_to_events;
     request_to_events--event/s-->Game;
 
-    Game--event/s-->events_to_response;
-    events_to_response--response-->Server;
+    Game--event/s-->event_to_response;
+    event_to_response--response-->Server;
     Server--response-->Client;
 ```
 
@@ -73,15 +73,15 @@ graph TD;
 ```mermaid
 graph TD;
     subgraph Game
-    process_events
-    generate_events
+    process_event
+    generate_event
     end
 
     Client--request-->Server;
     Server--request-->EventHandler;
-    EventHandler--event/s-->process_events;
+    EventHandler--event/s-->process_event;
 
-    generate_events--event/s-->EventHandler;
+    generate_event--event/s-->EventHandler;
     EventHandler--response-->Server;
     Server--response-->Client;
 ```

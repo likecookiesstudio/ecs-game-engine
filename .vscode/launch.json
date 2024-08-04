@@ -11,19 +11,19 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        { // Server
-            "name": "Server",
+        { // tic_tac_toe_kivy_online_server.py
+            "name": "tic_tac_toe_kivy_online_server.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "server.py",
+            "program": "tic_tac_toe_kivy_online_server.py",
             "console": "integratedTerminal"
         },
-        { // Client
-            "name": "Client",
+        { // tic_tac_toe_kivy_online_client.py
+            "name": "tic_tac_toe_kivy_online_client.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "client.py",
+            "program": "tic_tac_toe_kivy_online_client.py",
             "console": "integratedTerminal"
-        }
+        },
     ]
 }
